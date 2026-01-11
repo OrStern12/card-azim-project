@@ -1,4 +1,3 @@
-
 import argparse
 import sys
 import socket
@@ -10,7 +9,6 @@ def send_data(server_ip, server_port, data):
     client.connect((server_ip, server_port))
     client.send(((str)(len(data))+' '+data).encode('utf-8'))
     client.close()
-    pass
 
 
 def get_args():
@@ -25,9 +23,6 @@ def get_args():
 
 
 def main():
-    '''
-    Implementation of CLI and sending data to server.
-    '''
     args = get_args()
     try:
         send_data(args.server_ip, args.server_port, args.data)
