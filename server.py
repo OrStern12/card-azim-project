@@ -7,6 +7,7 @@ server = socket.socket()
 def run_server():
     c, address = server.accept()
     print(c.recv(1024).decode())
+    c.close()
 
 
 def get_args():
