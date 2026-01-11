@@ -1,8 +1,6 @@
 import argparse
 import sys
 import socket
-PORT = 22222
-IP = '127.0.0.1'
 server = socket.socket()
 
 def run_server():
@@ -11,14 +9,14 @@ def run_server():
     
 def get_args():
     parser = argparse.ArgumentParser(description='Send data to server.')
-    parser.add_argument('client_ip', type=str,
-                        help='the client\'s ip')
-    parser.add_argument('client_port', type=int,
-                        help='the client\'s port')
+    parser.add_argument('server_ip', type=str,
+                        help='the server\'s ip')
+    parser.add_argument('server_port', type=int,
+                        help='the server\'s port')
     return parser.parse_args()
 
 args = get_args()
-server.bind((args.client_ip, args.client_port))
-server.listen(5)
+server.bind((args.server_ip, args.server_port))
+server.listen(10)
 while True:
     run_server()
