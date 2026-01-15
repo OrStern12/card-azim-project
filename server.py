@@ -1,11 +1,10 @@
 import argparse
-import socket
 import threading
+from listener import Listener
+from connection import Connection
 
-server = socket.socket()
-
-def manage_client(c: socket.socket):   #function to manage a single client
-    print(c.recv(1024).decode())
+def manage_connection(c: Connection):   #function to manage a single connection
+    print(c.receive_message())
     c.close()
     
 def get_args():  # this function deals with the argument received in the beggining
@@ -16,10 +15,9 @@ def get_args():  # this function deals with the argument received in the beggini
 
 
 args = get_args()
-server.bind((args.server_ip, args.server_port))
-server.listen(10)
+server = Listener(args.server_ip, args.server_port)
 while True:
-    c, address = server.accept()
-    thr = threading.Thread(target=manage_client, args=(c,), kwargs={}) #thread handeling
+    connection = server.accept()
+    thr = threading.Thread(target=manage_connection, args=(connection,), kwargs={}) #thread handeling
     thr.start()
     
