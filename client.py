@@ -1,17 +1,8 @@
 import argparse
 import sys
-import socket
+from connection import Connection
 
-client = socket.socket()
-
-
-def send_data(server_ip, server_port, data):
-    client.connect((server_ip, server_port))
-    client.send(((str)(len(data)) + " " + data).encode("utf-8"))
-    client.close()
-
-
-def get_args():
+def get_args(): # this function received the arguments at the beggining (ip, port of the server)
     parser = argparse.ArgumentParser(description="Send data to server.")
     parser.add_argument("server_ip", type=str, help="the server's ip")
     parser.add_argument("server_port", type=int, help="the server's port")
@@ -22,7 +13,10 @@ def get_args():
 def main():
     args = get_args()
     try:
-        send_data(args.server_ip, args.server_port, args.data)
+        client = Connection.connect(args.server_ip, args.server_port)
+
+        client.send_message(args.data.encode())
+        client.close()
         print("Done.")
     except Exception as error:
         print(f"ERROR: {error}")
