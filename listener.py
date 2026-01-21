@@ -1,3 +1,4 @@
+from __future__ import annotations
 import socket
 from connection import Connection
 
@@ -5,7 +6,7 @@ MAX_RECV_TIME = 20
 
 class Listener:
 
-    def __repr__(self): #prints description of listener
+    def __repr__(self) -> str: #prints description of listener
         return "Listener(port=" + (str)(self.port) + "), host=" + (str)(self.host) + "), backlog=" + (str)(self.backlog) + ")"
     
     def start(self): #starts to listen
@@ -15,7 +16,7 @@ class Listener:
     def stop(self): # stops listening and closes the port
         self.socket.close()
 
-    def accept(self): # waits for connection and accepts
+    def accept(self) -> Connection: # waits for connection and accepts
         c, address = self.socket.accept()
         return Connection(c)
 
@@ -26,7 +27,7 @@ class Listener:
         self.socket = socket.socket()
         self.start()
     
-    def __enter__(self):
+    def __enter__(self) -> Listener:
         return self
     
     def __exit__(self):
