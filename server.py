@@ -2,12 +2,19 @@ import argparse
 import threading
 from listener import Listener
 from connection import Connection
+from card import Card
 
-def manage_connection(c: Connection):   #function to manage a single connection
-    print(c.receive_message())
+
+def manage_connection(c: Connection):  # function to manage a single connection
+    serialized_cardaz = c.receive_message()
+    cardaz = Card.deserialize(serialized_cardaz) #creating a cardaz according to the bytes sent
+    print(cardaz)
     c.close()
-    
-def get_args():  # this function deals with the argument received in the beggining
+
+
+def get_args() -> (
+    argparse.Namespace
+):  # this function deals with the argument received in the beggining
     parser = argparse.ArgumentParser(description="Send data to server.")
     parser.add_argument("server_ip", type=str, help="the server's ip")
     parser.add_argument("server_port", type=int, help="the server's port")
@@ -18,6 +25,7 @@ args = get_args()
 server = Listener(args.server_ip, args.server_port)
 while True:
     connection = server.accept()
-    thr = threading.Thread(target=manage_connection, args=(connection,), kwargs={}) #thread handeling
+    thr = threading.Thread(
+        target=manage_connection, args=(connection,), kwargs={}
+    )  # thread handeling
     thr.start()
-    
