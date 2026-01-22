@@ -3,6 +3,7 @@ import threading
 from listener import Listener
 from connection import Connection
 from card import Card
+import sys
 
 
 def manage_connection(c: Connection):  # function to manage a single connection
@@ -20,12 +21,16 @@ def get_args() -> (
     parser.add_argument("server_port", type=int, help="the server's port")
     return parser.parse_args()
 
+def main():
+    args = get_args()
+    server = Listener(args.server_ip, args.server_port)
+    while True:
+        connection = server.accept()
+        thr = threading.Thread(
+            target=manage_connection, args=(connection,), kwargs={}
+        )  # thread handeling
+        thr.start()
 
-args = get_args()
-server = Listener(args.server_ip, args.server_port)
-while True:
-    connection = server.accept()
-    thr = threading.Thread(
-        target=manage_connection, args=(connection,), kwargs={}
-    )  # thread handeling
-    thr.start()
+if __name__ == "__main__":
+    sys.exit(main())
+
