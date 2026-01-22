@@ -41,4 +41,5 @@ class Cryptimage:
         decrypted_bin_image = cipher.decrypt(bin_image) #decrypting bytes of image
         decrypted_image = Image.frombytes(mode, (width, height), decrypted_bin_image)
         self.image = decrypted_image
+        self.key_hash = None
         return True
