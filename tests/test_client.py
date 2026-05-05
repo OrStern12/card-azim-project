@@ -26,14 +26,14 @@ def test_client_main_1(monkeypatch):
         "2000", 
         "name",
         "or",
-        r"C:\Users\user\Documents\card-azim-project\pic1.PNG", 
+        r"C:\Users\user\card-azim-project\pic1.PNG", 
         "2+2", 
         "4"
     ]
     monkeypatch.setattr(sys, 'argv', test_args)
     client.main()
     card1 = Card.deserialize(MockSocket().recv())
-    card2 = Card.create_from_path("name", "or", r"C:\Users\user\Documents\card-azim-project\pic1.PNG", "2+2", "4")
+    card2 = Card.create_from_path("name", "or", r"C:\Users\user\card-azim-project\pic1.PNG", "2+2", "4")
     assert card1.solution != card2.solution
     card1.solution = "4"
     card2.cryptimage.encrypt("super secret key")
@@ -48,14 +48,14 @@ def test_client_main_2(monkeypatch):
         "2000", 
         "name",
         "or",
-        r"C:\Users\user\Documents\card-azim-project\pic1.PNG", 
+        r"C:\Users\user\card-azim-project\pic1.PNG", 
         "2+2", 
         "4"
     ]
     monkeypatch.setattr(sys, 'argv', test_args)
     client.main()
     card1 = Card.deserialize(MockSocket().recv())
-    card2 = Card.create_from_path("name", "or", r"C:\Users\user\Documents\card-azim-project\pic2.PNG", "2+2", "4")
+    card2 = Card.create_from_path("name", "or", r"C:\Users\user\card-azim-project\pic2.PNG", "2+2", "4")
     assert card1.solution != card2.solution
     card1.solution = "4"
     card2.cryptimage.encrypt("super secret key")
