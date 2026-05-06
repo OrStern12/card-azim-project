@@ -1,4 +1,5 @@
 from __future__ import annotations
+import PIL
 from PIL import Image
 from crypt_image import Cryptimage
 from typing import Union
@@ -61,7 +62,7 @@ class Card:
         image = Image.frombytes('RGB', (width, height), image_data) #creates image from data
         count += 3*width*height
         key = data[count:count+32] #receives hashed key
-        crypt_img = Cryptimage(image, key) #creates cryptimage object with the image and key we received
+        crypt_img = Cryptimage(image, key, "no path") #creates cryptimage object with the image and key we received
         count+=32
         riddle, count = get_string_from_bytes(data, count) #gets riddle for cardaz and updates count
         solution = None
