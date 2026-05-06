@@ -1,4 +1,5 @@
 from __future__ import annotations
+import PIL
 from PIL import Image
 from crypt_image import Cryptimage
 from typing import Union
