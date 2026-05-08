@@ -10,6 +10,17 @@ def get_string_from_bytes(data: bytes, index: int) -> tuple[str, int]:
         name = data[index:index+name_len].decode()
         return name, index+name_len
 
+def deserialize_image(count, data):
+        width = int.from_bytes(data[count:count+4], byteorder='big', signed=False) #gets width and height of image
+        height = int.from_bytes(data[count+4:count+8], byteorder='big', signed=False)
+        count = count+8
+        image_data = data[count:count+3*width*height] #getting image data. the 3 is because we always use 'RGB'
+        image = Image.frombytes('RGB', (width, height), image_data) #creates image from data
+        count += 3*width*height
+        key = data[count:count+32] #receives hashed key
+        count+=32
+        return image, count, key
+
 class Card:
     def __init__(self, name: str, creator: str, cryptimage: Cryptimage, riddle: str, solution: Union[str, None]):
         self.name = name
@@ -45,6 +56,7 @@ class Card:
             return_val += self.cryptimage.key_hash 
         else:
             raise Exception("sending unencrypted object") #If the key is None this will happen
+        return_val += len((str)(self.cryptimage.path)).to_bytes(4, byteorder='big')+(str)(self.cryptimage.path).encode()
         return_val += len(self.riddle).to_bytes(4, byteorder='big')+self.riddle.encode()
         return return_val
         
@@ -54,15 +66,9 @@ class Card:
         count = 0 #counts where we are in the traversal of the data
         name, count = get_string_from_bytes(data, count) #gets name for cardaz and updates count
         creator, count = get_string_from_bytes(data, count) #gets creator for cardaz and updates count
-        width = int.from_bytes(data[count:count+4], byteorder='big', signed=False) #gets width and height of image
-        height = int.from_bytes(data[count+4:count+8], byteorder='big', signed=False)
-        count = count+8
-        image_data = data[count:count+3*width*height] #getting image data. the 3 is because we always use 'RGB'
-        image = Image.frombytes('RGB', (width, height), image_data) #creates image from data
-        count += 3*width*height
-        key = data[count:count+32] #receives hashed key
-        crypt_img = Cryptimage(image, key) #creates cryptimage object with the image and key we received
-        count+=32
+        image, count, key = deserialize_image(count, data)
+        path, count = get_string_from_bytes(data, count)
+        crypt_img = Cryptimage(image, key, path) #creates cryptimage object with the image and key we received
         riddle, count = get_string_from_bytes(data, count) #gets riddle for cardaz and updates count
         solution = None
         return cls(name, creator, crypt_img, riddle, solution) #creates and returns the cardaz based on the data
