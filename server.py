@@ -3,12 +3,17 @@ import threading
 from listener import Listener
 from connection import Connection
 from card import Card
+from card_manager import CardManager
+import sys
 
+manager = CardManager()
 
 def manage_connection(c: Connection):  # function to manage a single connection
     serialized_cardaz = c.receive_message()
+    print("received card")
     cardaz = Card.deserialize(serialized_cardaz) #creating a cardaz according to the bytes sent
-    print(cardaz)
+    manager.save(cardaz, "C:/Users/user")
+    print(f"Saved card to path: C:/Users/user/{manager.get_identifier(cardaz)}")
     c.close()
 
 
@@ -20,12 +25,16 @@ def get_args() -> (
     parser.add_argument("server_port", type=int, help="the server's port")
     return parser.parse_args()
 
+def main():
+    args = get_args()
+    server = Listener(args.server_ip, args.server_port)
+    while True:
+        connection = server.accept()
+        thr = threading.Thread(
+            target=manage_connection, args=(connection,), kwargs={}
+        )  # thread handeling
+        thr.start()
 
-args = get_args()
-server = Listener(args.server_ip, args.server_port)
-while True:
-    connection = server.accept()
-    thr = threading.Thread(
-        target=manage_connection, args=(connection,), kwargs={}
-    )  # thread handeling
-    thr.start()
+if __name__ == "__main__":
+    sys.exit(main())
+
