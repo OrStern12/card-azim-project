@@ -6,9 +6,10 @@ from typing import Union
 from os import PathLike
 
 class Cryptimage:
-    def __init__(self, image: Image.Image, key: Union[bytes, None]):
+    def __init__(self, image: Image.Image, key: Union[bytes, None], path: Union[str, PathLike]):
         self.image = image
         self.key_hash = key
+        self.path = path
 
     @classmethod
     def create_from_path(cls, path: Union[str, PathLike]) -> Cryptimage:
@@ -16,7 +17,7 @@ class Cryptimage:
             path = path.__fspath__() #Making sure the path is a string
         image = Image.open(path)
         image = image.convert('RGB') #Making sure the image is RGB as we want
-        new_crypt_image = cls(image, None) #Using initiate to create a new Cryptimage
+        new_crypt_image = cls(image, None, path) #Using initiate to create a new Cryptimage
         return new_crypt_image
     
     def encrypt (self, key: str): #the function we create a hashed key by using haslib on the received key twice, and use the hashed key to enctypt the image
@@ -41,4 +42,5 @@ class Cryptimage:
         decrypted_bin_image = cipher.decrypt(bin_image) #decrypting bytes of image
         decrypted_image = Image.frombytes(mode, (width, height), decrypted_bin_image)
         self.image = decrypted_image
+        self.key_hash = None
         return True
