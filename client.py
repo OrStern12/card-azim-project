@@ -22,7 +22,7 @@ def get_args() -> (
 
 def main():
     args = get_args()
-
+    
     try:
         client = Connection.connect(args.server_ip, args.server_port)
         cardaz = Card.create_from_path(   #creating card for arguments
