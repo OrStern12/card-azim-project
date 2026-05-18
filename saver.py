@@ -10,8 +10,8 @@ from os import getenv
 from dotenv import load_dotenv
 from mssql_python import connect
 
-# Load environment variables from .env file
-import pyodbc  # Assuming pyodbc based on the syntax
+
+import pyodbc  
 
 
 
