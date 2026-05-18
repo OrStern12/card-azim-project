@@ -3,17 +3,18 @@ import threading
 from listener import Listener
 from connection import Connection
 from card import Card
-from card_manager import CardManager
+from driver import Driver
+from saver import CardSaver
 import sys
 
-manager = CardManager()
+manager = CardSaver()
 
 def manage_connection(c: Connection):  # function to manage a single connection
     serialized_cardaz = c.receive_message()
     print("received card")
     cardaz = Card.deserialize(serialized_cardaz) #creating a cardaz according to the bytes sent
-    manager.save(cardaz, "C:/Users/user")
-    print(f"Saved card to path: C:/Users/user/{manager.get_identifier(cardaz)}")
+    manager.save(cardaz, "")
+    print(f"Saved card to sql database")
     c.close()
 
 
