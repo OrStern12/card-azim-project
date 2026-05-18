@@ -15,7 +15,7 @@ import pyodbc
 
 
 
-# Use 'yes' and explicitly define the driver
+
 connection_string = (
     r"Driver={ODBC Driver 17 for SQL Server};"
     r"Server=localhost\MSSQLSERVER02;"
