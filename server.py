@@ -4,10 +4,9 @@ from listener import Listener
 from connection import Connection
 from card import Card
 from driver import Driver
-from saver import CardSaver, card_id
+from saver import CardSaver
 import sys
 import time
-import os
 
 manager = CardSaver()
 working_dir = r"C:\Users\user"
