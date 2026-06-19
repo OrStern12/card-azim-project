@@ -2,6 +2,7 @@ from __future__ import annotations
 import socket
 
 MAX_RECV_TIME = 20
+PACKAGE_SIZE = 16384
 
 class Connection:
     def __init__(self, connection: socket.socket): #initialize connection with socket
@@ -11,7 +12,7 @@ class Connection:
     def __repr__(self) -> str: # print who the connection is from and to who
         client = self.connection.getsockname()
         server = self.connection.getpeername()
-        return "connection from " + (str)(client[0]) + ":" + (str)(client[1]) + " to " + (str)(server[0]) + ":" + (str)(server[1]) #in index 0 we have the ip, and in index 1 we have the port number
+        return f"connection from {client[0]} : {client[1]} to {server[0]} : {server[1]}" #in index 0 we have the ip, and in index 1 we have the port number
     
     def send_message(self, message: bytes): #sends message through socket
         self.connection.send(message)
@@ -20,14 +21,13 @@ class Connection:
         try:
             data = b""
             while True:
-                packet = self.connection.recv(16384) #recieve 16KB each iteration until the end
+                packet = self.connection.recv(PACKAGE_SIZE) #recieve 16KB each iteration until the end
                 if not packet:
                     break
                 data+=packet
             return data
         except socket.timeout:
-            print("communication failure")
-            return b'1'
+            raise socket.timeout("communication failure")
 
     @classmethod
     def connect(cls, host, port) -> Connection: # creates a new connection to the given host and port
@@ -42,5 +42,5 @@ class Connection:
     def __enter__(self) -> Connection:
         return self
     
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         self.close()

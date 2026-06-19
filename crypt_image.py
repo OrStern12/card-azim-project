@@ -20,7 +20,10 @@ class Cryptimage:
         new_crypt_image = cls(image, None, path) #Using initiate to create a new Cryptimage
         return new_crypt_image
     
-    def encrypt (self, key: str): #the function we create a hashed key by using haslib on the received key twice, and use the hashed key to enctypt the image
+    def encrypt (self, key: str): 
+        '''the function we create a hashed key by using haslib on the received key twice, and use the hashed key to enctypt the image'''
+        if(len(key) != 16):
+            raise ValueError
         bin_key = key.encode("utf-8")
         self.key_hash = hashlib.sha256(hashlib.sha256(bin_key).digest()).digest() #hashing the key as needed
         width, height = self.image.size  
@@ -31,7 +34,8 @@ class Cryptimage:
         encrypted_image = Image.frombytes(mode, (width, height), encrypted_bin_image)
         self.image = encrypted_image
     
-    def decrypt (self, key: str) -> bool: #the function will check if the received key the correct base key, and if so, decrypt the image
+    def decrypt (self, key: str) -> bool: 
+        """the function will check if the received key the correct base key, and if so, decrypt the image"""
         bin_key = key.encode()
         if self.key_hash != hashlib.sha256(hashlib.sha256(bin_key).digest()).digest(): #checking if the received key is equal to the base key (before it was hashed)
             return False

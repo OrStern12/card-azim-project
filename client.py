@@ -4,13 +4,15 @@ from connection import Connection
 from card import Card
 
 
-def add_cardaz_argument(parser: argparse.ArgumentParser, word: str): #function to add each arg of the cardaz to the parser
-    parser.add_argument(word, type=str, help="the " + word + " of the cardaz") 
+def add_cardaz_argument(parser: argparse.ArgumentParser, word: str): 
+    """function to add each arg of the cardaz to the parser"""
+    parser.add_argument(word, type=str, help=f"the {word} of the cardaz") 
 
 
 def get_args() -> (
     argparse.Namespace
-):  # this function received the arguments at the beggining (ip, port of the server)
+):  
+    """ this function received the arguments at the beggining (ip, port of the server)"""
     parser = argparse.ArgumentParser(description="Send data to server.")
     parser.add_argument("server_ip", type=str, help="the server's ip")
     parser.add_argument("server_port", type=int, help="the server's port")
