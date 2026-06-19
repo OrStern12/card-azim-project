@@ -6,21 +6,26 @@ MAX_RECV_TIME = 20
 
 class Listener:
 
-    def __repr__(self) -> str: #prints description of listener
+    def __repr__(self) -> str: 
+        """prints description of listener"""
         return "Listener(port=" + (str)(self.port) + "), host=" + (str)(self.host) + "), backlog=" + (str)(self.backlog) + ")"
     
-    def start(self): #starts to listen
+    def start(self): 
+        """starts to listen"""
         self.socket.bind((self.host, self.port))
         self.socket.listen(self.backlog)
     
-    def stop(self): # stops listening and closes the port
+    def stop(self): 
+        """stops listening and closes the port"""
         self.socket.close()
 
-    def accept(self) -> Connection: # waits for connection and accepts
+    def accept(self) -> Connection: 
+        """waits for connection and accepts"""
         c, address = self.socket.accept()
         return Connection(c)
 
-    def __init__(self, host: str, port: int, backlog: int = 1000): # initializes the listener and starts to listen
+    def __init__(self, host: str, port: int, backlog: int = 1000): 
+        """initializes the listener and starts to listen"""
         self.host = host
         self.port = port
         self.backlog = backlog
@@ -30,7 +35,7 @@ class Listener:
     def __enter__(self) -> Listener:
         return self
     
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         self.stop()
 
 
