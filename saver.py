@@ -1,20 +1,11 @@
-import sqlite3
-import mysql.connector
-from mysql.connector import Error
-from card import *
-import os
-import json
-from card_driver import CardDriver
-from abc import ABC, abstractmethod
-from os import getenv
+from typing import Union
+from os import PathLike
+from crypt_image import Cryptimage
+from card import Card, deserialize_image, img_bytes
+from card_driver import CardDriver, card_id
 from dotenv import load_dotenv
-from mssql_python import connect
-
-
 import pyodbc  
-
-
-
+from collections import namedtuple
 
 connection_string = (
     r"Driver={ODBC Driver 17 for SQL Server};"
@@ -23,6 +14,8 @@ connection_string = (
     r"Trusted_Connection=yes;"
     r"autocommit=True;"
 )
+SIZE_OF_CHAR = 255
+card_tup = namedtuple('card_tup', ['creator', 'name', 'riddle', 'solution', 'path', 'image_bin'])
 
 
 def img_bytes(card) -> bytes:
@@ -43,43 +36,56 @@ class CardSaver(CardDriver):
     def save(self,  card: Card, dir_path: Union[str, PathLike] = '.') -> None:
         load_dotenv()
         conn = pyodbc.connect(connection_string) #opening connection to database
-        conn.autocommit = True
         cursor = conn.cursor()
-        image_bytes = img_bytes(card)
-        self.creator_list.append(card.creator)
-        cursor.execute(f"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[{card.creator}]') AND type in (N'U')) "
-               f"BEGIN CREATE TABLE [dbo].[{card.creator}] (name NVARCHAR(255), riddle NVARCHAR(255), solution NVARCHAR(255), path NVARCHAR(255), image_bin VARBINARY(MAX)) END;") #create table for creator of none exists
-        imagepath = card.cryptimage.path if card.cryptimage else None
-        creator_name = card.creator.strip()
-        sql = f"INSERT INTO [dbo].[{creator_name}] (name, riddle, solution, path, image_bin) VALUES (?, ?, ?, ?, ?)"
-        cursor.setinputsizes([
-            (pyodbc.SQL_WVARCHAR, 255),
-            (pyodbc.SQL_WVARCHAR, 255), 
-            (pyodbc.SQL_WVARCHAR, 255), 
-            (pyodbc.SQL_WVARCHAR, 255),  
-            (pyodbc.SQL_LONGVARBINARY,)    # image_bin, need to inform of large binary string
-        ])
-        val = (card.name, card.riddle, card.solution, imagepath, image_bytes)
-        cursor.execute(sql, val) #insert now column
-        cursor.close()
-        conn.close()
+        conn.autocommit = True
+        cursor.execute(f"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[card_table]') AND type in (N'U')) "
+                f"BEGIN CREATE TABLE [dbo].[card_table] (creator NVARCHAR(255), name NVARCHAR(255), riddle NVARCHAR(255), solution NVARCHAR(255), path NVARCHAR(255), image_bin VARBINARY(MAX)) END;") #create table if none exists
+        try:
+            image_bytes = img_bytes(card)
+            self.creator_list.append(card.creator)
+            imagepath = card.cryptimage.path if card.cryptimage else None
+            creator_name = card.creator.strip()
+            sql = f"INSERT INTO [dbo].[card_table] (creator, name, riddle, solution, path, image_bin) VALUES (?, ?, ?, ?, ?, ?)"
+            size_requirment = (pyodbc.SQL_WVARCHAR, SIZE_OF_CHAR)
+            cursor.setinputsizes([
+                size_requirment,
+                size_requirment,
+                size_requirment, 
+                size_requirment, 
+                size_requirment,  
+                (pyodbc.SQL_LONGVARBINARY,)    # image_bin, need to inform of large binary string
+            ])
+            val = (card.creator, card.name, card.riddle, card.solution, imagepath, image_bytes)
+            cursor.execute(sql, val) #insert now column
+        except:
+            print("sql error")
+        finally:
+            cursor.close()
+            conn.close()
         
-    def get_identifier(self, card: Card) -> tuple:
-        return (card.name,card.creator)
+    def get_identifier(self, card: Card) -> card_id:
+        return card_id(card.name,card.creator)
 
-    def load (self, identifier: tuple) -> Card:
+    def load (self, identifier: card_id) -> Card:
         load_dotenv()
         conn = pyodbc.connect(connection_string)
         conn.autocommit = True
         cursor = conn.cursor()
-        cursor.execute(f"SELECT name, riddle, solution, path, image_bin FROM [dbo].[{identifier[0]}];")
-        for tup in cursor.fetchall():
-            if tup[0] == identifier[1]:
-                image, a, key = deserialize_image(0, tup[4]) #tup[4] contains the image string
-                cryimage = Cryptimage(image, key, tup[4])
-                cursor.close()
-                conn.close()
-                return Card(tup[0], identifier[0], cryimage, tup[1], tup[2])
+        try:
+            cursor.execute(f"SELECT creator, name, riddle, solution, path, image_bin FROM [dbo].[card_table];")
+            for tup in cursor.fetchall():
+                tup = card_tup(*tup)
+                if tup.creator == identifier.creator and tup.name == identifier.name:
+                    image, a, key = deserialize_image(0, tup.image_bin) #tup[4] contains the image string
+                    cryimage = Cryptimage(image, key, tup.image_bin)
+                    cursor.close()
+                    conn.close()
+                    return Card(tup.name, identifier.creator, cryimage, tup.riddle, tup.solution)
+        except:
+            print("sql error")
+            cursor.close()
+            conn.close()
+    
     
     def get_creators(self) -> list:
         return self.creator_list
@@ -89,15 +95,22 @@ class CardSaver(CardDriver):
         conn = pyodbc.connect(connection_string)
         conn.autocommit = True
         cursor = conn.cursor()
-        cursor.execute(f"SELECT name, riddle, solution, path, image_bin FROM [dbo].[{creator}];")
-        card_list=[]
-        for tup in cursor.fetchall():  #passing through the table of the creator
-            image, a, key = deserialize_image(0, tup[4])
-            cryimage = Cryptimage(image, key, tup[4])
-            card_list.append(Card(tup[0], creator, cryimage, tup[1], tup[2]))
-        cursor.close()
-        conn.close()
-        return card_list
+        card_list = []
+        try:
+            cursor.execute(f"SELECT creator, name, riddle, solution, path, image_bin FROM [dbo].[card_table];")
+            for tup in cursor.fetchall():
+                tup = card_tup(*tup)
+                if tup.creator == creator:
+                    image, a, key = deserialize_image(0, tup.image_bin) #tup[4] contains the image string
+                    cryimage = Cryptimage(image, key, tup.image_bin)
+                    card_list.append(Card(tup.name, creator, cryimage, tup.riddle, tup.solution))
+        except:
+            print("sql error")
+        finally:
+            cursor.close()
+            conn.close()
+            return card_list
+
     
     
 
