@@ -1,6 +1,6 @@
-from card import *
-import os
-import json
+from typing import Union
+from os import PathLike
+from card import Card
 from abc import ABC, abstractmethod
 from collections import namedtuple
 
